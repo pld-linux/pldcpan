@@ -514,7 +514,7 @@ for my $arg (@ARGV) {
 
 # vim: ts=4 sw=4 noet noai nosi cin
 __DATA__
-# $[% 'Revision$, $Date' %]$
+# $[% 'Revision:$, $Date$
 #
 # Conditional build:
 %bcond_without  tests           # do not perform "make test"
@@ -641,4 +641,4 @@ rm -rf $RPM_BUILD_ROOT
 * %{date} PLD Team <feedback@pld-linux.org>
 All persons listed below can be reached at <cvs_login>@pld-linux.org
 
-$[%'Log'%]$
+$[%'Log:'%]$
