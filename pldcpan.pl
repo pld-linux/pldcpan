@@ -475,13 +475,13 @@ rm -rf $RPM_BUILD_ROOT
 %doc[% FOREACH doc = doc_files %] [% doc %][% END %]
 [% END -%]
 [% IF test_is_xs -%]
-%{perl_vendorarch}/%{pdir}/*.pm
-%dir %{perl_vendorarch}/auto/%{pdir}/%{pnam}
-%{perl_vendorarch}/auto/%{pdir}/%{pnam}/*.bs
-%attr(755,root,root) %{perl_vendorarch}/auto/%{pdir}/%{pnam}/*.so
+%{perl_vendorarch}/[% pdir %]/*.pm
+%dir %{perl_vendorarch}/auto/[% pdir %]/[% pnam %]
+%{perl_vendorarch}/auto/[% pdir %]/[% pnam %]/*.bs
+%attr(755,root,root) %{perl_vendorarch}/auto/[% pdir %]/[% pnam %]/*.so
 [% ELSE -%]
-%{perl_vendorlib}/%{pdir}/*.pm
-%{perl_vendorlib}/%{pdir}/%{pnam}
+%{perl_vendorlib}/[% pdir %]/*.pm
+%{perl_vendorlib}/[% pdir %]/[% pnam %]
 [% END -%]
 %{_mandir}/man3/*
 [% IF test_has_examples -%]
