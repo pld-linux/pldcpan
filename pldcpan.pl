@@ -8,11 +8,27 @@ use Template     ();
 use YAML         ();
 use Digest::MD5  ();
 
-# $Id$
-
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
 die $@ if $@;
+
+unless (@ARGV) {
+	die <<'EOF';
+usage:
+	pldcpan.pl [ OPTIONS ] <list of CPAN archives>
+
+options:
+	-v|--verbose      shout, and shout loud
+	-B|--modulebuild  prefer Module::Build
+	-M|--makemaker    prefer ExtUtils::MakeMaker (default)
+
+This program uncompresses given archives in the current directory
+and -- more or less successfully -- attempts to write corresponding
+perl-*.spec files.
+
+$Id$
+EOF
+}
 
 # get maximum information from archive name
 sub test_directory {
@@ -34,7 +50,7 @@ sub test_directory {
 		)
 		-
 		(\d[\d._-]*)
-		$ #ix
+		/*$ #ix
 	  )
 	{
 		warn " -- cannot resolve name and version: '$fooball'\n";
