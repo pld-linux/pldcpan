@@ -517,7 +517,7 @@ __DATA__
 # $[% 'Revision:$, $Date'%]:$
 #
 # Conditional build:
-%bcond_without  tests           # do not perform "make test"
+%bcond_without	tests		# do not perform "make test"
 #
 %include	/usr/lib/rpm/macros.perl
 %define	pdir	[% pdir %]
@@ -636,7 +636,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_examplesdir}/%{name}-%{version}
 [% END -%]
 
-%define date    %(echo `LC_ALL="C" date +"%a %b %d %Y"`)
+%define	date	%(echo `LC_ALL="C" date +"%a %b %d %Y"`)
 %changelog
 * %{date} PLD Team <feedback@pld-linux.org>
 All persons listed below can be reached at <cvs_login>@pld-linux.org
