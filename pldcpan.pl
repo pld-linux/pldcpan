@@ -401,7 +401,7 @@ Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{pnam}-%{version
 [% ELSE -%]
 Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{version}.tar.gz
 [% END -%]
-# Source0-md5:	[% source0md5 %]
+[% IF source0md5 %]# Source0-md5:	[% source0md5 %][% END -%]
 BuildRequires:	perl-devel >= 1:5.8
 BuildRequires:	rpm-perlprov >= 4.1-13
 [% IF test_has_tests -%]
