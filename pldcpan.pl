@@ -457,4 +457,4 @@ rm -rf $RPM_BUILD_ROOT
 * %{date} PLD Team <feedback@pld-linux.org>
 All persons listed below can be reached at <cvs_login>@pld-linux.org
 
-$Log$
+$[%'Log'%]$
