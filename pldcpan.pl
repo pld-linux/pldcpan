@@ -214,7 +214,6 @@ sub test_find_summ_descr {
 	}
 	$info->{summary} =~ y/\r\n\t /    /s;
 	$info->{$_} =~ s/^\s+|\s+$//g for qw/summary descr/;
-	warn "dupa";
 
 	warn " ,, no summary in $info->{pod_file}\n"     unless $info->{summary};
 	warn " ,, no description in $info->{pod_file}\n" unless $info->{descr};
