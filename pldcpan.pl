@@ -179,7 +179,7 @@ sub test_find_pod_file {
 	}
 	$info->{pod_file} = $pod_file;
 
-	warn " -- no \$pod_file: $_\n" unless $pod_file;
+	warn " -- no \$pod_file <@{$info->{parts}}>\n" unless $pod_file;
 	$info->{_tests}->{find_pod_file} = defined $info->{pod_file} ? 1 : 0;
 }
 
@@ -291,7 +291,7 @@ sub test_is_xs {
 
 sub configure {
 	my $info = shift;
-
+	
 }
 
 sub build {
