@@ -3,12 +3,14 @@ use strict;
 use vars qw(%opts);
 use Cwd qw(getcwd);
 use Getopt::Long qw(GetOptions);
-use IPC::Run qw(run);
 use Archive::Any ();
 use Template     ();
 use YAML         ();
 use Digest::MD5  ();
-use IO::All;
+use Pod::Tree    ();
+
+#use IPC::Run qw(run);
+#use IO::All;
 
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
@@ -184,10 +186,40 @@ sub test_find_summ_descr {
 	my $info = shift;
 	return $info->{_tests}->{find_summ_descr}
 	  if defined $info->{_tests}->{find_summ_descr};
-
 	test_find_pod_file($info)
 	  || return $info->{_tests}->{find_summ_descr} = 0;
 
+	my $tree = new Pod::Tree;
+	$tree->load_file($info->{pod_file});
+
+	unless ($tree->has_pod) {
+		warn " ,, no POD in $info->{pod_file}\n";
+		return $info->{_tests}->{find_summ_descr} = 0;
+	}
+
+	my $root = $tree->get_root;
+	$info->{$_} = '' for qw/summary descr/;
+
+	my $state;
+	for my $n (@{ $root->get_children }) {
+		if ($n->is_c_head1) {
+			undef $state;
+			$state = 'summary'
+			  if $n->get_text =~ /^\s*NAME\b/ && !$info->{summary};
+			$state = 'descr'
+			  if $n->get_text =~ /^\s*DESCRIPTION\b/ && !$info->{descr};
+			next;
+		}
+		$info->{$state} .= $n->get_text if $state;
+	}
+	$info->{summary} =~ y/\r\n\t /    /s;
+	$info->{$_} =~ s/^\s+|\s+$//g for qw/summary descr/;
+	warn "dupa";
+
+	warn " ,, no summary in $info->{pod_file}\n"     unless $info->{summary};
+	warn " ,, no description in $info->{pod_file}\n" unless $info->{descr};
+
+=pod
 	my $file < io($info->{pod_file});
 	$file =~ y/\r//d;
 	if ($file =~ /(?:^|\n)=head\d\s+NAME[\t ]*\n\s*(.+)\n+(?:=|$)/) {
@@ -209,6 +241,7 @@ sub test_find_summ_descr {
 		warn " ,, no description: $_\n";
 		$info->{descr} = '';
 	}
+=cut
 
 	$info->{_tests}->{find_summ_descr} =
 	  ($info->{summary} || $info->{descr}) ? 1 : 0;
@@ -352,11 +385,12 @@ for my $arg (@ARGV) {
 		  keys %{ $info->{_tests} }
 	};
 
-	pp $info if $opts{verbose};
+	pp($info) if $opts{verbose};
 
 	my $spec = join('-', "$basedir/perl", @{ $info->{parts} }) . '.spec';
 	warn " .. writing to $spec\n";
 
+	my $rotfl = tell DATA;
 	my $tmpl =
 	  Template->new(
 		{ INTERPOLATE => 0, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1 });
@@ -365,6 +399,7 @@ for my $arg (@ARGV) {
 	  . $tmpl->error->type . "\n"
 	  . $tmpl->error->info . "\n"
 	  . $tmpl->error . "\n";
+	seek DATA, $rotfl, 0;
 }
 
 # vim: ts=4 sw=4 noet noai nosi cin
@@ -401,7 +436,9 @@ Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{pnam}-%{version
 [% ELSE -%]
 Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{version}.tar.gz
 [% END -%]
-[% IF source0md5 %]# Source0-md5:	[% source0md5 %][% END -%]
+[% IF source0md5 -%]
+# Source0-md5:	[% source0md5 %]
+[% END -%]
 BuildRequires:	perl-devel >= 1:5.8
 BuildRequires:	rpm-perlprov >= 4.1-13
 [% IF test_has_tests -%]
