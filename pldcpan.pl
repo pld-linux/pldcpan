@@ -198,7 +198,7 @@ sub test_find_pod_file {
 
 # workaround for Pod::Parser not supporting "\r\n" line endings
 {
-	no warnings;
+	no warnings 'redefine';
 
 	sub Pod::Parser::preprocess_line {
 		(my $text = $_[1]) =~ y/\r//d;
