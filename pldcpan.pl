@@ -125,7 +125,8 @@ sub test_has_doc_files {
 		map { $_, lc $_, uc $_ }
 		  map { $_, "$_.txt", "$_.TXT" }
 		  qw(AUTHORS BUGS ChangeLog Changes CREDITS doc docs documentation EXTRAS
-		  GOALS HACKING HISTORY INSTALL NEW NEWS NOTES PATCHING README ToDo)
+		  GOALS HACKING HISTORY INSTALL NEW NEWS NOTES PATCHING README DISCLAIMER
+		  ToDo)
 	];
 	$info->{_tests}->{has_doc_files} = @{ $info->{doc_files} } ? 1 : 0;
 }
