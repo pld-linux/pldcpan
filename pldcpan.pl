@@ -4,11 +4,13 @@ use vars qw(%opts);
 use Cwd qw(getcwd);
 use Getopt::Long qw(GetOptions);
 use IPC::Run qw(run timeout);
+use Pod::Select qw(podselect);
+use Pod::Tree      ();
 use Archive::Any   ();
 use Template       ();
 use YAML           ();
 use Digest::MD5    ();
-use Pod::Tree      ();
+use IO::String     ();
 use File::Iterator ();
 
 #use IO::All;
@@ -35,14 +37,14 @@ $Id$
 EOF
 }
 
-# get maximum information from archive name
+# get maximum information from directory name
 sub test_directory {
 	my $fooball = shift;
 	my $info    = shift;
 	return $info->{_tests}->{directory}
 	  if defined $info->{_tests}->{directory};
 
-	#	FIXME: use -v
+	#	FIXME: use -v  (hmm, what did I meant?)
 	unless (
 		$fooball =~ m#^
 		(?:.*/)?
@@ -54,7 +56,7 @@ sub test_directory {
 		  )?
 		)
 		-
-		(\d[\d._-]*)
+		(\d[\d._-]*[a-z]?)
 		/*$ #ix
 	  )
 	{
@@ -177,22 +179,55 @@ sub test_find_pod_file {
 	{
 		$pod_file = $info->{META_yml}->{version_from};
 	}
-	$info->{pod_file} = $pod_file;
 
-	warn " -- no \$pod_file <@{$info->{parts}}>\n" unless $pod_file;
-	$info->{_tests}->{find_pod_file} = defined $info->{pod_file} ? 1 : 0;
+	unless ($pod_file) {
+		warn " -- no \$pod_file <@{$info->{parts}}>\n";
+		return $info->{_tests}->{find_pod_file} = 0;
+	}
+
+	my $tree = new Pod::Tree;
+	$tree->load_file($pod_file);
+	unless ($tree->has_pod) {
+		warn " ,, no POD in $pod_file\n";
+		return $info->{_tests}->{find_pod_file} = 0;
+	}
+
+	$info->{pod_file} = $pod_file;
+	$info->{_tests}->{find_pod_file} = 1;
+}
+
+# workaround for Pod::Parser not supporting "\r\n" line endings
+{
+	no warnings;
+
+	sub Pod::Parser::preprocess_line {
+		(my $text = $_[1]) =~ y/\r//d;
+		$text;
+	}
 }
 
 sub test_find_summ_descr {
 	my $info = shift;
 	return $info->{_tests}->{find_summ_descr}
 	  if defined $info->{_tests}->{find_summ_descr};
-	test_find_pod_file($info)
-	  || return $info->{_tests}->{find_summ_descr} = 0;
+	return $info->{_tests}->{find_summ_descr} = 0
+	  unless test_find_pod_file($info);
 
+	#	my $parser = new Pod::Select;
+	#	$parser->parse_from_file($info->{pod_file});
+	for my $sec ({ h => 'summary', s => 'NAME' },
+		{ h => 'descr', s => 'DESCRIPTION' })
+	{
+		my $H = new IO::String \$info->{ $sec->{h} };
+		podselect({ -output => $H, -sections => [$sec->{s}] },
+			$info->{pod_file});
+		$H->close;
+		$info->{ $sec->{h} } =~ s/^\s*=head.*//;
+	}
+
+=pod
 	my $tree = new Pod::Tree;
 	$tree->load_file($info->{pod_file});
-
 	unless ($tree->has_pod) {
 		warn " ,, no POD in $info->{pod_file}\n";
 		return $info->{_tests}->{find_summ_descr} = 0;
@@ -213,6 +248,8 @@ sub test_find_summ_descr {
 		}
 		$info->{$state} .= $n->get_text if $state;
 	}
+=cut
+
 	$info->{summary} =~ y/\r\n\t /    /s;
 	$info->{$_} =~ s/^\s+|\s+$//g for qw/summary descr/;
 
@@ -368,8 +405,9 @@ sub run_install {
 		  : qw(perl ./Build install);
 	}
 	else {
-		@cmd = qw(make install), "DESTDIR='$info->{tmp_destdir}'";
+		@cmd = (qw(make install), "DESTDIR='$info->{tmp_destdir}'");
 	}
+	die "nfy";
 }
 
 sub find_files {
@@ -377,6 +415,7 @@ sub find_files {
 	return $info->{_tests}->{find_files}
 	  if defined $info->{_tests}->{find_files};
 	return $info->{_tests}->{find_files} = 0 unless run_install($info);
+	die "nfy";
 }
 
 for my $arg (@ARGV) {
