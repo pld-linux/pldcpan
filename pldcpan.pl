@@ -72,6 +72,7 @@ sub test_directory {
 		$info->{parts} =
 		  [$separ ? (split /$separ/, $info->{ballname}) : ($info->{ballname})];
 	}
+	$info->{parts_joined} = join '::', @{$info->{parts}};
 	$info->{_tests}->{directory} = 1;
 }
 
@@ -478,7 +479,8 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %{?with_tests:./Build test}
 [% ELSE -%]
-%{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>".......")'
+%{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>"[% parts_joined %]")' \
+	INSTALLDIRS=vendor
 %{__make}[% IF test_is_xs -%] \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
