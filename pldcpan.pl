@@ -3,13 +3,14 @@ use strict;
 use vars qw(%opts);
 use Cwd qw(getcwd);
 use Getopt::Long qw(GetOptions);
-use Archive::Any ();
-use Template     ();
-use YAML         ();
-use Digest::MD5  ();
-use Pod::Tree    ();
+use IPC::Run qw(run timeout);
+use Archive::Any   ();
+use Template       ();
+use YAML           ();
+use Digest::MD5    ();
+use Pod::Tree      ();
+use File::Iterator ();
 
-#use IPC::Run qw(run);
 #use IO::All;
 
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
@@ -72,7 +73,7 @@ sub test_directory {
 		$info->{parts} =
 		  [$separ ? (split /$separ/, $info->{ballname}) : ($info->{ballname})];
 	}
-	$info->{parts_joined} = join '::', @{$info->{parts}};
+	$info->{parts_joined} = join '::', @{ $info->{parts} };
 	$info->{_tests}->{directory} = 1;
 }
 
@@ -157,7 +158,6 @@ sub test_find_pod_file {
 	die "not a directory ($info->{dir})!" unless -d $info->{dir};
 
 	my $pod_file;
-	use File::Iterator;
 
 	my $mfile = (reverse @{ $info->{parts} })[0];
 	my $it    = File::Iterator->new(
@@ -270,9 +270,7 @@ sub gen_tarname_unexp {
 }
 
 sub unexpand_macros {
-	my $info = shift;
-	return
-	  unless exists $info->{tarname} && test_directory($info->{dir}, $info);
+	my $info  = shift;
 	my $value = shift;
 	$value =~ s/\Q$info->{pdir}\E/%{pdir}/;
 	$value =~ s/\Q$info->{pnam}\E/%{pnam}/ if $info->{pnam};
@@ -289,24 +287,96 @@ sub test_is_xs {
 	$info->{_tests}->{is_xs} = (<*.c> || <*.xs>) ? 1 : 0;
 }
 
-sub configure {
+sub run_configure {
 	my $info = shift;
-	
+	test_build_style($info);
+	return $info->{_tests}->{run_configure}
+	  if defined $info->{_tests}->{run_configure};
+
+	$info->{tmp_destdir} = getcwd() . "/pldcpan_destdir_$$";
+	system(qw(rm -rf), $info->{tmp_destdir}) if -e $info->{tmp_destdir};
+	my @cmd;
+	if ($info->{_tests}->{build_style}) {
+		@cmd =
+		  $info->{uses_makemaker}
+		  ? qw(perl Makefile.PL INSTALLDIRS=vendor)
+		  : (
+			qw(perl Build.PL installdirs=vendor config="optimize='%{rpmcflags}'"),
+			qw(destdir='$info->{tmp_destdir}')
+		  );
+	}
+	else {
+		@cmd = (
+			qw(perl -MExtUtils::MakeMaker -wle),
+			qq#WriteMakefile(NAME=>"$info->{parts_joined}")#,
+			qw(INSTALLDIRS=>vendor)
+		);
+	}
+	$info->{_tests}->{run_configure} = run \@cmd, \undef, \my $out, \my $err,
+	  timeout(20);
 }
 
-sub build {
+sub run_build {
 	my $info = shift;
-	return 0 unless configure($info);
+	return $info->{_tests}->{run_build} if defined $info->{_tests}->{run_build};
+	return $info->{_tests}->{run_build} = 0 unless run_configure($info);
+
+	my @cmd;
+	if ($info->{_tests}->{build_style}) {
+		@cmd =
+		  $info->{uses_makemaker}
+		  ? qw(make)
+		  : qw(perl ./Build);
+	}
+	else {
+		@cmd = qw(make);
+	}
+	$info->{_tests}->{run_build} = run \@cmd, \undef, \my $out, \my $err,
+	  timeout(60);
 }
 
-sub test {
+sub run_test {
 	my $info = shift;
-	return 0 unless build($info);
+	return $info->{_tests}->{run_test} if defined $info->{_tests}->{run_test};
+	return $info->{_tests}->{run_test} = 0 unless run_build($info);
+
+	my @cmd;
+	if ($info->{_tests}->{build_style}) {
+		@cmd =
+		  $info->{uses_makemaker}
+		  ? qw(make test)
+		  : qw(perl ./Build test);
+	}
+	else {
+		@cmd = qw(make test);
+	}
+	$info->{_tests}->{run_test} = run \@cmd, \undef, \my $out, \my $err,
+	  timeout(360);
 }
 
-sub install {
+sub run_install {
 	my $info = shift;
-	return 0 unless build($info);
+	return $info->{_tests}->{run_install}
+	  if defined $info->{_tests}->{run_install};
+	return $info->{_tests}->{run_install} = 0 unless run_build($info);
+
+	my @cmd;
+	if ($info->{_tests}->{build_style}) {
+		@cmd =
+		  $info->{uses_makemaker}
+		  ? (qw(make install), "DESTDIR='$info->{tmp_destdir}'")
+		  : qw(perl ./Build install);
+	}
+	else {
+		@cmd = qw(make install), "DESTDIR='$info->{tmp_destdir}'";
+	}
+}
+
+sub find_files {
+	my $info = shift;
+	return $info->{_tests}->{find_files}
+	  if defined $info->{_tests}->{find_files};
+	return $info->{_tests}->{find_files} = 0 unless run_install($info);
 }
 
 for my $arg (@ARGV) {
@@ -391,7 +461,7 @@ for my $arg (@ARGV) {
 	warn " .. writing to $spec\n";
 
 	my $rotfl = tell DATA;
-	my $tmpl =
+	my $tmpl  =
 	  Template->new(
 		{ INTERPOLATE => 0, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1 });
 	$tmpl->process(\*DATA, $info, $spec)
