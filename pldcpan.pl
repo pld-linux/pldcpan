@@ -514,7 +514,7 @@ for my $arg (@ARGV) {
 
 # vim: ts=4 sw=4 noet noai nosi cin
 __DATA__
-# $[% 'Revision:$, $Date$
+# $[% 'Revision:$, $Date'%]:$
 #
 # Conditional build:
 %bcond_without  tests           # do not perform "make test"
