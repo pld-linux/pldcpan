@@ -3,14 +3,16 @@ use strict;
 use vars qw(%opts);
 use Cwd qw(getcwd);
 use Getopt::Long qw(GetOptions);
+use IPC::Run qw(run);
 use Archive::Any ();
 use Template     ();
 use YAML         ();
 use Digest::MD5  ();
+use IO::All;
 
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
-die $@ if $@;
+die $@                        if $@;
 
 unless (@ARGV) {
 	die <<'EOF';
@@ -100,7 +102,8 @@ sub test_has_examples {
 	die "not a directory ($info->{dir})!" unless -d $info->{dir};
 
 	$info->{examples} =
-	  [grep -e, map { $_, lc $_, uc $_ } qw(Example Examples Eg Sample Samples)];
+	  [grep -e,
+		map { $_, lc $_, uc $_ } qw(Example Examples Eg Sample Samples)];
 	$info->{_tests}->{has_examples} = @{ $info->{examples} } ? 1 : 0;
 }
 
@@ -185,9 +188,8 @@ sub test_find_summ_descr {
 	test_find_pod_file($info)
 	  || return $info->{_tests}->{find_summ_descr} = 0;
 
-	use File::Slurp ();
-
-	(my $file = File::Slurp::read_file($info->{pod_file})) =~ y/\r//d;
+	my $file < io($info->{pod_file});
+	$file =~ y/\r//d;
 	if ($file =~ /(?:^|\n)=head\d\s+NAME[\t ]*\n\s*(.+)\n+(?:=|$)/) {
 		$info->{summary} = $1;
 		$info->{summary} =~ s/\s+$//g;
@@ -198,9 +200,8 @@ sub test_find_summ_descr {
 	}
 	if ($file =~ /\n=head\d DESCRIPTION\s*\n\s*((?:(?<!=head).+\n){1,15})/) {
 		$info->{descr} = $1;
-		use IPC::Run ();
 		my $tmp;
-		IPC::Run::run ["fmt"], \$info->{descr}, \$tmp;
+		run ['fmt'], \$info->{descr}, \$tmp;
 		$info->{descr} = $tmp if length $tmp;
 		$info->{descr} =~ s/\s+$//g;
 	}
@@ -253,6 +254,26 @@ sub test_is_xs {
 
 	# Ugly bitch.
 	$info->{_tests}->{is_xs} = (<*.c> || <*.xs>) ? 1 : 0;
+}
+
+sub configure {
+	my $info = shift;
+
+}
+
+sub build {
+	my $info = shift;
+	return 0 unless configure($info);
+}
+
+sub test {
+	my $info = shift;
+	return 0 unless build($info);
+}
+
+sub install {
+	my $info = shift;
+	return 0 unless build($info);
 }
 
 for my $arg (@ARGV) {
@@ -345,7 +366,6 @@ for my $arg (@ARGV) {
 	  . $tmpl->error->info . "\n"
 	  . $tmpl->error . "\n";
 }
-
 
 # vim: ts=4 sw=4 noet noai nosi cin
 __DATA__
