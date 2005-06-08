@@ -528,7 +528,7 @@ Summary:	[% summary %]
 #Summary(pl):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
 Version:	[% version %]
-Release:	1
+Release:	0.1
 [% IF test_license && license == 'perl' -%]
 # same as perl
 License:	GPL v1+ or Artistic
