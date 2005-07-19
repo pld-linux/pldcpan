@@ -3,7 +3,7 @@ Summary:	PLD Linux script to create RPMS from CPAN modules
 Summary(pl):	Skrypt PLD tworz±cy pakiety RPM z modu³ów z CPAN
 Name:		pldcpan
 Version:	1.23
-Release:	0.1
+Release:	1
 Epoch:		0
 License:	GPL
 Group:		Development/Languages/Perl
