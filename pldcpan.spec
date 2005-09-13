@@ -7,6 +7,7 @@ Release:	1
 Epoch:		0
 License:	GPL
 Group:		Development/Languages/Perl
+BuildRequires:	rpm-perlprov
 Source0:	%{name}.pl
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
