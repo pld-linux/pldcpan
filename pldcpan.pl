@@ -581,7 +581,10 @@ BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
 [% IF test_has_tests -%]
 %if %{with tests}
-[% FOREACH req = META_yml.requires, META_yml.build_requires -%]
+[% FOREACH req = META_yml.requires -%]
+BuildRequires:	perl([% req.key %])[%IF req.value%] >= [% req.value %][%END%]
+[% END -%]
+[% FOREACH req = META_yml.build_requires -%]
 BuildRequires:	perl([% req.key %])[%IF req.value%] >= [% req.value %][%END%]
 [% END -%]
 %endif
