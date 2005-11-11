@@ -1,17 +1,18 @@
 #!/usr/bin/perl -w
 use strict;
 use vars qw(%opts);
-use Cwd qw(getcwd);
-use Getopt::Long qw(GetOptions);
-use IPC::Run qw(run timeout);
-use Pod::Select qw(podselect);
-use Pod::Tree      ();
-use Archive::Any   ();
-use Template       ();
-use YAML           ();
-use Digest::MD5    ();
-use IO::String     ();
-use File::Iterator ();
+use Cwd              qw(getcwd);
+use Getopt::Long     qw(GetOptions);
+use IPC::Run         qw(run timeout);
+use Pod::Select      qw(podselect);
+use Pod::Tree        qw();
+use Archive::Any     qw();
+use Template         qw();
+use YAML             qw();
+use Digest::MD5      qw();
+use IO::String       qw();
+use File::Iterator   qw();
+use Module::CoreList qw();
 
 #use IO::All;
 
@@ -151,7 +152,34 @@ sub load_META_yml {
 	if (-f 'META.yml') {
 		$info->{META_yml} = YAML::LoadFile('META.yml');
 	}
+
+	_remove_core_meta_requires($info, 'requires');
+	_remove_core_meta_requires($info, 'build_requires');
+	
 	$info->{_tests}->{license} = $info->{META_yml} ? 1 : 0;
+}
+
+sub _remove_core_meta_requires {
+	my ($info, $key) = @_;
+
+	return if ref($info->{META_yml}->{$key}) ne 'HASH';
+
+	while (my ($module, $version) = each %{ $info->{META_yml}->{$key} }) {
+		my $result;
+		print "Checking dependency: $module $version\n" if $opts{verbose};
+		if ($version) {
+			$result = Module::CoreList->first_release($module, $version);
+		} else {
+			$result = Module::CoreList->first_release($module);
+		}
+		# $] - perl version
+		if ( $result and $result < $] ) {
+			if ($opts{verbose}) {
+				print "Module $module availablie in core since $result, skipping\n"
+			}
+			delete $info->{META_yml}->{$key}->{$module};
+		}
+	}
 }
 
 sub test_find_pod_file {
