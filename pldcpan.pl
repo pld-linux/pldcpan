@@ -27,8 +27,8 @@ usage:
 
 options:
 	-v|--verbose      shout, and shout loud
-	-B|--modulebuild  prefer Module::Build
-	-M|--makemaker    prefer ExtUtils::MakeMaker (default)
+	-B|--modulebuild  prefer Module::Build (default)
+	-M|--makemaker    prefer ExtUtils::MakeMaker
 
 This program uncompresses given archives in the current directory
 and -- more or less successfully -- attempts to write corresponding
@@ -604,14 +604,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %setup -q -n [% dir_unexp %][% IF is_impolite %]-c[% END %]
 
 %build
-[% IF uses_makemaker -%]
-%{__perl} Makefile.PL \
-	INSTALLDIRS=vendor
-%{__make}[% IF test_is_xs -%] \
-	OPTIMIZE="%{rpmcflags}"[% END %]
-
-%{?with_tests:%{__make} test}
-[% ELSIF uses_module_build -%]
+[% IF uses_module_build -%]
 %{__perl} Build.PL \
 [% IF test_is_xs %]	config="optimize='%{rpmcflags}'" \[% END -%]
 	destdir=$RPM_BUILD_ROOT \
@@ -619,6 +612,13 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 ./Build
 
 %{?with_tests:./Build test}
+[% ELSIF uses_makemaker -%]
+%{__perl} Makefile.PL \
+	INSTALLDIRS=vendor
+%{__make}[% IF test_is_xs -%] \
+	OPTIMIZE="%{rpmcflags}"[% END %]
+
+%{?with_tests:%{__make} test}
 [% ELSE -%]
 %{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>"[% parts_joined %]")' \
 	INSTALLDIRS=vendor
@@ -631,11 +631,11 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %install
 rm -rf $RPM_BUILD_ROOT
 
-[% IF uses_makemaker || !uses_module_build -%]
+[% IF uses_module_build || !uses_makemaker -%]
+./Build install
+[% ELSE -%]
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
-[% ELSE -%]
-./Build install
 [% END -%]
 [% IF test_has_examples -%]
 
