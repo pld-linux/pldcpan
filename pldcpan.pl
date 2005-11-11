@@ -659,8 +659,9 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorarch}/auto/[% pdir %]/[% pnam %]/*.bs
 %attr(755,root,root) %{perl_vendorarch}/auto/[% pdir %]/[% pnam %]/*.so
 [% ELSE -%]
-%{perl_vendorlib}/[% pdir %]/*.pm
-%{perl_vendorlib}/[% pdir %]/[% pnam %]
+[%- number = parts.size - 1 -%]
+%{perl_vendorlib}/[% parts.first(number).join('/') %]/*.pm
+%{perl_vendorlib}/[% pdir %]/[% parts.last(number).join('/') %]
 [% END -%]
 %{_mandir}/man3/*
 [% IF test_has_examples -%]
