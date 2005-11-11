@@ -221,6 +221,7 @@ sub test_find_pod_file {
 		return $info->{_tests}->{find_pod_file} = 0;
 	}
 
+	$info->{_podtree} = $tree;
 	$info->{pod_file} = $pod_file;
 	$info->{_tests}->{find_pod_file} = 1;
 }
@@ -232,6 +233,97 @@ sub test_find_pod_file {
 	sub Pod::Parser::preprocess_line {
 		(my $text = $_[1]) =~ y/\r//d;
 		$text;
+	}
+}
+
+sub test_find_summ_descr2 {
+	my $info = shift;
+	
+	return $info->{_tests}->{find_summ_descr} = 0
+	  unless test_find_pod_file($info);
+	
+	my $tree = $info->{_podtree};
+	my $handler = _get_node_handler();
+	$tree->walk( $handler );
+	($info->{summary}, $info->{descr}, $info->{pod_license}) = $handler->('data');
+}
+
+# This subroutine return closure to be used as a node handler in Pod::Tree walk() method
+sub _get_node_handler {
+	# state informaion
+	my $next_is_summary;
+	my $we_are_in_license;
+	my $we_are_in_description;
+	my $nodes_since_description_start;
+	# data we will return
+	my ($summary, $description, $license);
+
+	return sub {
+		my $node = shift;
+
+		# If not called with a node, then return collected data
+		if (!ref $node) {
+			$summary =~ s/^ \s* (.*?) \s* $/$1/gxm;
+			print "<$license>\n";
+			return ($summary, $description, $license);
+		}
+
+		# We want to dive into root node. Note that this is the only
+		# place we ever descend into tree
+		return 1 if $node->is_root;
+
+		# If we have encountered any head command then abort collecting
+		# summary and description
+		my $command = $node->get_command;
+		if ($node->is_command and $node->get_command =~ /head/) {
+			if ($command eq 'head1' or $nodes_since_description_start > 3) {
+				$we_are_in_description	= 0;
+			}
+			$next_is_summary = 0;
+			$we_are_in_license = 0;
+		}
+
+		# If previous element started an summary section, then treat
+		# this one as summary text.
+		if ($next_is_summary) {
+			$summary = $node->get_deep_text;
+			$summary =~ s/^\s+(.*?)\s+$/$1/;
+			$next_is_summary = 0;
+			return;
+		}
+		if ($we_are_in_license) {
+			$license .= $node->get_text;
+			return;
+		}
+
+		# If we started collecting description then add any ordinary
+		# node to collected description
+		if ($we_are_in_description) {
+			if ($nodes_since_description_start > 5) {
+				$we_are_in_description = 0;
+			}
+			elsif ($node->is_ordinary or $node->is_verbatim) {
+				$description .= $node->get_deep_text;
+				$nodes_since_description_start++;
+			}
+			else {
+				return;
+			}
+		}
+		
+		# OK, next will be sumary text
+		if ($node->is_c_head1 and $node->get_text =~ /^\s*NAME\s*$/) {
+			$next_is_summary = 1;
+		}
+		# OK, description nodes will proceeed (until another head command)
+		if ($node->is_c_head1 and $node->get_text =~ /DESCRIPTION/) {
+			$we_are_in_description = 1;
+			$nodes_since_description_start = 1;
+		}
+		if ($node->is_c_head1 and $node->get_text =~ /LICENSE|COPYRIGHT/) {
+			$we_are_in_license = 1;
+		}
+		return;
 	}
 }
 
@@ -502,7 +594,8 @@ for my $arg (@ARGV) {
 	warn " .. processing $info->{dir}\n";
 	chdir $info->{dir};
 
-	test_find_summ_descr($info);
+#	test_find_summ_descr($info);
+	test_find_summ_descr2($info);
 	test_license($info);
 	test_is_xs($info);
 	test_has_tests($info);
