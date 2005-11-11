@@ -141,6 +141,9 @@ sub test_license {
 		  $info->{META_yml}->{license} =~ /^l?gpl$/
 		  ? uc $info->{META_yml}->{license}
 		  : $info->{META_yml}->{license};
+	# This depends on test_find_summ_descr2
+	} elsif (my $license = $info->{pod_license}) {
+		$info->{license} = 'perl' if $license =~ /same terms as perl/i;
 	}
 	$info->{_tests}->{license} = $info->{license} ? 1 : 0;
 }
@@ -190,7 +193,7 @@ sub test_find_pod_file {
 
 	my $pod_file;
 
-	my $mfile = (reverse @{ $info->{parts} })[0];
+	my $mfile = @{ $info->{parts} }[-1];
 	my $it    = File::Iterator->new(
 		DIR     => $info->{dir},
 		RECURSE => 1,
