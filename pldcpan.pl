@@ -275,7 +275,7 @@ sub _get_node_handler {
 		# If we have encountered any head command then abort collecting
 		# summary and description
 		my $command = $node->get_command;
-		if ($node->is_command and $node->get_command =~ /head/) {
+		if ($node->is_command and $command =~ /head/) {
 			if ($command eq 'head1' or $nodes_since_description_start > 3) {
 				$we_are_in_description	= 0;
 			}
