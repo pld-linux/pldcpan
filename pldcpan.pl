@@ -269,7 +269,6 @@ sub _get_node_handler {
 		# If not called with a node, then return collected data
 		if (!ref $node) {
 			$summary =~ s/^ \s* (.*?) \s* $/$1/gxm;
-			print "<$license>\n";
 			return ($summary, $description, $license);
 		}
 
