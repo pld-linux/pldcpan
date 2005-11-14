@@ -16,6 +16,8 @@ use Module::CoreList qw();
 
 #use IO::All;
 
+our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /(\d+)/g;
+
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
 die $@                        if $@;
