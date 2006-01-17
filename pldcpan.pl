@@ -15,6 +15,18 @@ use File::Iterator   qw();
 use Module::CoreList qw();
 
 #use IO::All;
+=cut
+TODO/Wishlist
+
+- rm -f .packlist in install
+- use poldek to search if dir should be packaged:
+$ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
+perl-base-5.8.7-4
+- first could be checked if the dir is contained by perl-base (will be faster
+than querying poldek)
+- implement what SPECS/new-cpan.sh provides -- automatically downloading tarball from cpan
+
+=cut
 
 our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /(\d+)/g;
 
