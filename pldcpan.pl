@@ -14,7 +14,6 @@ use IO::String       qw();
 use File::Iterator   qw();
 use Module::CoreList qw();
 
-#use IO::All;
 =cut
 TODO/Wishlist
 
@@ -24,7 +23,6 @@ $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
 perl-base-5.8.7-4
 - first could be checked if the dir is contained by perl-base (will be faster
 than querying poldek)
-- implement what SPECS/new-cpan.sh provides -- automatically downloading tarball from cpan
 
 =cut
 
@@ -37,7 +35,7 @@ die $@                        if $@;
 unless (@ARGV) {
 	die <<'EOF';
 usage:
-	pldcpan.pl [ OPTIONS ] <list of CPAN archives>
+	pldcpan.pl [ OPTIONS ] DIST [ DIST2 DIST3 ... ]
 
 options:
 	-v|--verbose      shout, and shout loud
@@ -47,6 +45,9 @@ options:
 This program uncompresses given archives in the current directory
 and -- more or less successfully -- attempts to write corresponding
 perl-*.spec files.
+
+DIST can be a directory, a compressed archive, URL to fetch or module
+name (Foo::Bar) to be found on search.cpan.org.
 
 $Id$
 EOF
@@ -558,8 +559,47 @@ sub find_files {
 for my $arg (@ARGV) {
 	my $info = { _tests => {} };
 
-	if (!-e $arg) {
-		warn "$arg does not exist!\n";
+	if (-e $arg) {
+		## local file; otherwise... hackish trash code :-]
+		## TODO: %pdir / %pnam in %URL
+	}
+	elsif (my ($tarname) =
+		$arg =~ m#^(?:https?|ftp)://[^/]+/(?:[^/]+/)*([^/]+)$#)
+	{
+		$info->{url} = $arg;
+		warn " -- fetching '$tarname'\n";
+		require LWP::Simple;
+		my $response = LWP::Simple::mirror($info->{url}, $tarname);
+		if (HTTP::Status::is_error($response)) {
+			warn " !! fetching '$tarname' failed: code $response. omiting.\n";
+			next;
+		}
+		$arg = $tarname;
+	}
+	elsif ($arg =~ /^[a-z\d_]+(?:::[a-z\d_]+)*$/i) {
+		require LWP::Simple;
+		(my $dist = $arg) =~ s/::/-/g;
+		warn " -- searching for '$dist' on search.cpan.org\n";
+		my $scpan = LWP::Simple::get("http://search.cpan.org/dist/$dist/");
+		if (   !defined $scpan
+			|| $scpan =~ /cannot be found, did you mean one of these/
+			|| $scpan !~ m#<a href="/CPAN/authors/id/([^"]+/([^/"]+))">Download</a>#)
+		{
+			warn " !! searching for '$dist' on search.cpan.org failed\n";
+			next;
+		}
+		$info->{url} = "http://www.cpan.org/modules/by-authors/id/$1";
+		my ($tarname) = $2;
+		warn " .. found $info->{url}\n";
+		my $response = LWP::Simple::mirror($info->{url}, $tarname);
+		if (HTTP::Status::is_error($response)) {
+			warn " !! fetching '$tarname' failed: code $response. omiting.\n";
+			next;
+		}
+		$arg = $tarname;
+	}
+	else {
+		warn " omiting '$arg': !-e or bar URL\n";
 		next;
 	}
 
@@ -676,7 +716,9 @@ License:	[% license %]
 #License:	GPL v1+ or Artistic
 [% END -%]
 Group:		Development/Languages/Perl
-[% IF tarname -%]
+[% IF url -%]
+Source0:	[% url %]
+[% ELSIF tarname -%]
 Source0:	http://www.cpan.org/modules/by-module/%{pdir}/[% tarname_unexp %]
 [% ELSIF pnam -%]
 Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{pnam}-%{version}.tar.gz
