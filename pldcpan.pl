@@ -17,7 +17,6 @@ use Module::CoreList qw();
 =cut
 TODO/Wishlist
 
-- rm -f .packlist in install
 - use poldek to search if dir should be packaged:
 $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
 perl-base-5.8.7-4
