@@ -22,6 +22,7 @@ $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
 perl-base-5.8.7-4
 - first could be checked if the dir is contained by perl-base (will be faster
 than querying poldek)
+- get dir of dos newlines in %description (^M - try pldcpan XML::Writer::String)
 
 =cut
 
