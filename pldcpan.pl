@@ -22,13 +22,12 @@ $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
 perl-base-5.8.7-4
 - first could be checked if the dir is contained by perl-base (will be faster
 than querying poldek)
-- get dir of dos newlines in %description (^M - try pldcpan XML::Writer::String)
 
 =cut
 
 our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /(\d+)/g;
 
-GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M');
+GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
 die $@                        if $@;
 
@@ -41,6 +40,7 @@ options:
 	-v|--verbose      shout, and shout loud
 	-B|--modulebuild  prefer Module::Build (default)
 	-M|--makemaker    prefer ExtUtils::MakeMaker
+	   --force        overwrite existing *.spec files
 
 This program uncompresses given archives in the current directory
 and -- more or less successfully -- attempts to write corresponding
@@ -72,7 +72,7 @@ sub test_directory {
 		  )?
 		)
 		-
-		(\d[\d._-]*[a-z]?)
+		(\d[\d._-]*[a-z]?\d*)
 		/*$ #ix
 	  )
 	{
@@ -303,13 +303,13 @@ sub _get_node_handler {
 		# If previous element started an summary section, then treat
 		# this one as summary text.
 		if ($next_is_summary) {
-			$summary = $node->get_deep_text;
+			($summary = $node->get_deep_text) =~ y/\r//d;
 			$summary =~ s/^\s+(.*?)\s+$/$1/;
 			$next_is_summary = 0;
 			return;
 		}
 		if ($we_are_in_license) {
-			$license .= $node->get_text;
+			($license .= $node->get_text) =~ y/\r//d;
 			return;
 		}
 
@@ -320,7 +320,7 @@ sub _get_node_handler {
 				$we_are_in_description = 0;
 			}
 			elsif ($node->is_ordinary or $node->is_verbatim) {
-				$description .= $node->get_deep_text;
+				($description .= $node->get_deep_text) =~ y/\r//d;
 				$nodes_since_description_start++;
 			}
 			else {
@@ -576,7 +576,7 @@ for my $arg (@ARGV) {
 		}
 		$arg = $tarname;
 	}
-	elsif ($arg =~ /^[a-z\d_]+(?:::[a-z\d_]+)*$/i) {
+	elsif ($arg =~ /^[a-z\d_]+(?:(?:::|-)[a-z\d_]+)*$/i) {
 		require LWP::Simple;
 		(my $dist = $arg) =~ s/::/-/g;
 		warn " -- searching for '$dist' on search.cpan.org\n";
@@ -599,7 +599,7 @@ for my $arg (@ARGV) {
 		$arg = $tarname;
 	}
 	else {
-		warn " omiting '$arg': !-e or bar URL\n";
+		warn " !! omiting '$arg': !-e or bad URL\n";
 		next;
 	}
 
@@ -674,8 +674,12 @@ for my $arg (@ARGV) {
 
 	pp($info) if $opts{verbose};
 
+	die " !! I find the idea of overwriting perl.spec disgusting."
+	  unless @{ $info->{parts} };
 	my $spec = join('-', "$basedir/perl", @{ $info->{parts} }) . '.spec';
-	warn " .. writing to $spec\n";
+	warn " .. writing to '$spec'" . (-e $spec ? " ... which exists...\n" : "\n");
+	die " !! I'm not to overwriting '$spec' without --force\n"
+	  if -e $spec && !$opts{force};
 
 	my $rotfl = tell DATA;
 	my $tmpl  =
