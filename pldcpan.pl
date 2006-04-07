@@ -209,7 +209,11 @@ sub test_find_pod_file {
 	my $pod_file;
 
 	my $mfile = @{ $info->{parts} }[-1];
-	my $it    = File::Iterator->new(
+	if (!defined $mfile) {
+		warn " .. unable to search for \$pod_file without parts\n";
+		return $info->{_tests}->{find_pod_file} = 0;
+	}
+	my $it = File::Iterator->new(
 		DIR     => $info->{dir},
 		RECURSE => 1,
 		FILTER  => sub { $_[0] =~ m#(?:^|/)\Q$mfile\E\.(?:pod|pm)$# }
@@ -239,8 +243,8 @@ sub test_find_pod_file {
 		return $info->{_tests}->{find_pod_file} = 0;
 	}
 
-	$info->{_podtree} = $tree;
-	$info->{pod_file} = $pod_file;
+	$info->{_podtree}                = $tree;
+	$info->{pod_file}                = $pod_file;
 	$info->{_tests}->{find_pod_file} = 1;
 }
 
