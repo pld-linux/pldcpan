@@ -216,12 +216,13 @@ sub test_find_pod_file {
 	my $it = File::Iterator->new(
 		DIR     => $info->{dir},
 		RECURSE => 1,
-		FILTER  => sub { $_[0] =~ m#(?:^|/)\Q$mfile\E\.(?:pod|pm)$# }
+		FILTER =>
+		  sub { $_[0] =~ m#(?:^|/)\Q$mfile\E\.(?:pod|pm)$# && $_[0] !~ m#/t/# }
 	);
 	my ($pm, $pod);
-	while (local $_ = $it->next()) {
-		$pod = $_ if /\.pod$/;
-		$pm  = $_ if /\.pm$/;
+	while (my $f = $it->next()) {
+		$pod = $f if $f =~ /\.pod$/;
+		$pm  = $f if $f =~ /\.pm$/;
 	}
 	$pod_file = $pod ? $pod : $pm;
 	if (   !$pod_file
