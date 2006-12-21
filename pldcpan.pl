@@ -728,14 +728,20 @@ Group:		Development/Languages/Perl
 [% IF url -%]
 Source0:	[% url %]
 [% ELSIF tarname -%]
-Source0:	http://www.cpan.org/modules/by-module/%{pdir}/[% tarname_unexp %]
+Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/[% tarname_unexp %]
 [% ELSIF pnam -%]
-Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{pnam}-%{version}.tar.gz
+Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{pnam}-%{version}.tar.gz
 [% ELSE -%]
-Source0:	http://www.cpan.org/modules/by-module/%{pdir}/%{pdir}-%{version}.tar.gz
+Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar.gz
 [% END -%]
 [% IF source0md5 -%]
 # Source0-md5:	[% source0md5 %]
+[% END -%]
+# generic URL, check or change before uncommenting
+[% IF pnam -%]
+#URL:		http://search.cpan.org/dist/[% pdir %]/
+[% ELSE -%]
+#URL:		http://search.cpan.org/dist/[% pdir %]-[% pnam %]/
 [% END -%]
 BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
