@@ -739,9 +739,9 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 [% END -%]
 # generic URL, check or change before uncommenting
 [% IF pnam -%]
-#URL:		http://search.cpan.org/dist/[% pdir %]/
-[% ELSE -%]
 #URL:		http://search.cpan.org/dist/[% pdir %]-[% pnam %]/
+[% ELSE -%]
+#URL:		http://search.cpan.org/dist/[% pdir %]/
 [% END -%]
 BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
