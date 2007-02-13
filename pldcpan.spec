@@ -4,7 +4,7 @@
 #
 %include	/usr/lib/rpm/macros.perl
 Summary:	PLD Linux script to create RPMS from CPAN modules
-Summary(pl.UTF-8):   Skrypt PLD tworzący pakiety RPM z modułów z CPAN
+Summary(pl.UTF-8):	Skrypt PLD tworzący pakiety RPM z modułów z CPAN
 Name:		pldcpan
 Version:	1.39
 Release:	1
