@@ -711,7 +711,7 @@ __DATA__
 %define	pnam	[% pnam %]
 [% END -%]
 Summary:	[% summary %]
-#Summary(pl):	
+#Summary(pl.UTF-8):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
 Version:	[% version %]
 Release:	0.1
@@ -763,7 +763,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %description
 [% descr %]
 
-# %description -l pl
+# %description -l pl.UTF-8
 # TODO
 
 %prep
