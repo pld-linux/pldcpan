@@ -1,18 +1,20 @@
 #!/usr/bin/perl -w
 use strict;
-use vars qw(%opts);
-use Cwd              qw(getcwd);
-use Getopt::Long     qw(GetOptions);
-use IPC::Run         qw(run timeout);
-use Pod::Select      qw(podselect);
-use Pod::Tree        qw();
-use Archive::Any     qw();
-use Template         qw();
-use YAML             qw();
-use Digest::MD5      qw();
-use IO::String       qw();
-use File::Iterator   qw();
-use Module::CoreList qw();
+
+use Cwd qw( getcwd );
+use Getopt::Long qw( GetOptions );
+use IPC::Run qw( run timeout );
+use Pod::Select qw( podselect );
+
+use Pod::Tree        ();
+use Archive::Any     ();
+use Template         ();
+use YAML             ();
+use Digest::MD5      ();
+use IO::String       ();
+use File::Iterator   ();
+use Module::CoreList ();
+use LWP::Simple      ();
 
 =cut
 TODO/Wishlist
@@ -26,7 +28,7 @@ than querying poldek)
 =cut
 
 our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /(\d+)/g;
-
+our %opts;
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
 die $@                        if $@;
@@ -464,7 +466,7 @@ sub test_is_xs {
 	  if defined $info->{_tests}->{is_xs};
 
 	# Ugly bitch.
-	$info->{_tests}->{is_xs} = (<*.c> || <*.xs>) ? 1 : 0;
+	$info->{_tests}->{is_xs} = ( <*.c> || <*.xs> || <*/*.c> || <*/*.xs> || <*/*/*.c> || <*/*/*.xs> ) ? 1 : 0;
 }
 
 sub run_configure {
@@ -561,6 +563,33 @@ sub find_files {
 	die "nfy";
 }
 
+sub build_reqs_list {
+	my $info = shift;
+	my $rr   = $info->{META_yml}->{requires};
+	my $br   = $info->{META_yml}->{build_requires};
+	my %RR   = map format_r_or_br( $_, $rr->{$_} ), keys %$rr;
+	my %BR   = map format_r_or_br( $_, $br->{$_} ), keys %$br;
+	$info->{requires}       = \%RR;
+	$info->{build_requires} = \%BR;
+}
+
+sub format_r_or_br {
+	my ( $package, $version ) = @_;
+	my $rpmreq = "perl($package)";
+	( my $possible = "perl-$package" ) =~ s/::/-/g;
+	if (   run( [ 'rpm', '-q', $possible ], \my ( undef, $out, $err ) )
+		or run( [ 'rpm', '-q', '--whatprovides', $possible ], \my ( undef, $out2, $err2 ) ) )
+	{
+		return $possible => $version;    # we have this package or it is provided by something else
+	}
+	elsif ( run( [ 'rpm', '-q', '--qf', '%{NAME}\n', '--whatprovides', $rpmreq ], \my ( undef, $out3, $err3 ) ) ) {
+		my @providers = grep !/^perl-(?:base|modules|devel)$/, split /\s+/, $out3;    # might be more than one
+		return unless @providers;                                                     # core, ignore
+		return $providers[0] => $version if @providers == 1;
+	}
+	return $rpmreq => $version;                                                       # fallback
+}
+
 for my $arg (@ARGV) {
 	my $info = { _tests => {} };
 
@@ -573,7 +602,6 @@ for my $arg (@ARGV) {
 	{
 		$info->{url} = $arg;
 		warn " -- fetching '$tarname'\n";
-		require LWP::Simple;
 		my $response = LWP::Simple::mirror($info->{url}, $tarname);
 		if (HTTP::Status::is_error($response)) {
 			warn " !! fetching '$tarname' failed: code $response. omiting.\n";
@@ -582,7 +610,6 @@ for my $arg (@ARGV) {
 		$arg = $tarname;
 	}
 	elsif ($arg =~ /^[a-z\d_]+(?:(?:::|-)[a-z\d_]+)*$/i) {
-		require LWP::Simple;
 		(my $dist = $arg) =~ s/::/-/g;
 		warn " -- searching for '$dist' on search.cpan.org\n";
 		my $scpan = LWP::Simple::get("http://search.cpan.org/dist/$dist/");
@@ -664,9 +691,18 @@ for my $arg (@ARGV) {
 	test_has_doc_files($info);
 	test_build_style($info);
 	gen_tarname_unexp($info);
+	build_reqs_list($info);
 
 	$info->{dir} =~ s#.*/##;
 	$info->{dir_unexp} = unexpand_macros($info, $info->{dir});
+
+	# try to fixup the URL
+	if ($info->{url} && $info->{url} =~ m,/by-authors/id/, && $info->{pdir}) {
+		my $base_url = "http://www.cpan.org/modules/by-module/$info->{pdir}/";
+		if (LWP::Simple::head($base_url . $info->{tarname})) {
+			$info->{url} = $base_url . unexpand_macros($info, $info->{tarname});
+		}
+	}
 
 	chdir $basedir;
 
@@ -747,11 +783,12 @@ BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
 [% IF test_has_tests -%]
 %if %{with tests}
-[% FOREACH req = META_yml.requires -%]
-BuildRequires:	perl([% req.key %])[%IF req.value%] >= [% req.value %][%END%]
+[% FOREACH req IN requires.keys.sort -%]
+BuildRequires:	[% req %][% ' >= ' _ requires.$req IF requires.$req %]
 [% END -%]
-[% FOREACH req = META_yml.build_requires -%]
-BuildRequires:	perl([% req.key %])[%IF req.value%] >= [% req.value %][%END%]
+[% FOREACH req IN build_requires.keys.sort -%]
+[% NEXT IF requires.exists(req) -%]
+BuildRequires:	[% req %][% ' >= ' _ build_requires.$req IF build_requires.$req %]
 [% END -%]
 %endif
 [% END -%]
