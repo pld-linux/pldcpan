@@ -1,4 +1,7 @@
 #!/usr/bin/perl -w
+# Requirements:
+# perl-Pod-Tree perl-Archive-Any perl-Template-Toolkit perl-YAML perl-IO-String
+# perl-File-Iterator perl-Module-CoreList
 use strict;
 
 use Cwd qw( getcwd );
