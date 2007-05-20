@@ -810,29 +810,31 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %setup -q -n [% dir_unexp %][% IF is_impolite %]-c[% END %]
 
 %build
-[% IF uses_module_build -%]
+[%- IF uses_module_build %]
 %{__perl} Build.PL \
-[% IF test_is_xs %]	config="optimize='%{rpmcflags}'" \[% END -%]
+[%- IF test_is_xs %]
+	config="optimize='%{rpmcflags}'" \
+[%- END %]
 	destdir=$RPM_BUILD_ROOT \
 	installdirs=vendor
 ./Build
 
 %{?with_tests:./Build test}
-[% ELSIF uses_makemaker -%]
+[%- ELSIF uses_makemaker %]
 %{__perl} Makefile.PL \
 	INSTALLDIRS=vendor
 %{__make}[% IF test_is_xs -%] \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
 %{?with_tests:%{__make} test}
-[% ELSE -%]
+[%- ELSE %]
 %{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>"[% parts_joined %]")' \
 	INSTALLDIRS=vendor
 %{__make}[% IF test_is_xs -%] \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
 %{?with_tests:%{__make} test}
-[% END -%]
+[%- END %]
 
 %install
 rm -rf $RPM_BUILD_ROOT
