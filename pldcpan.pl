@@ -742,6 +742,7 @@ __DATA__
 # $[% 'Revision:$, $Date'%]:$
 #
 # Conditional build:
+%bcond_without	autodeps	# don't BR packages needed only for resolving deps
 %bcond_without	tests		# do not perform "make test"
 #
 %include	/usr/lib/rpm/macros.perl
@@ -785,7 +786,7 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
 [% IF test_has_tests -%]
-%if %{with tests}
+%if %{with autodeps} || %{with tests}
 [% FOREACH req IN requires.keys.sort -%]
 BuildRequires:	[% req %][% ' >= ' _ requires.$req IF requires.$req %]
 [% END -%]
@@ -842,7 +843,7 @@ rm -rf $RPM_BUILD_ROOT
 [% IF uses_module_build || !uses_makemaker -%]
 ./Build install
 [% ELSE -%]
-%{__make} install \
+%{__make} pure_install \
 	DESTDIR=$RPM_BUILD_ROOT
 [% END -%]
 [% IF test_has_examples -%]
