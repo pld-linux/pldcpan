@@ -187,6 +187,9 @@ sub _remove_core_meta_requires {
 
 	return if ref($info->{META_yml}->{$key}) ne 'HASH';
 
+	# avoid perl(perl) >= 5.6... requires
+	delete $info->{META_yml}->{$key}->{perl};
+
 	while (my ($module, $version) = each %{ $info->{META_yml}->{$key} }) {
 		my $result;
 		print "Checking dependency: $module $version\n" if $opts{verbose};
