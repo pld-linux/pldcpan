@@ -750,7 +750,7 @@ __DATA__
 [% IF pnam -%]
 %define	pnam	[% pnam %]
 [% END -%]
-Summary:	[% summary %]
+Summary:	[% summary.replace('[\r\n]+', ' ') %]
 #Summary(pl.UTF-8):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
 Version:	[% version %]
