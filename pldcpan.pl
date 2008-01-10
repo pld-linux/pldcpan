@@ -828,6 +828,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %{__perl} Makefile.PL \
 	INSTALLDIRS=vendor
 %{__make}[% IF test_is_xs -%] \
+	CC="%{__cc}" \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
 %{?with_tests:%{__make} test}
@@ -835,6 +836,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>"[% parts_joined %]")' \
 	INSTALLDIRS=vendor
 %{__make}[% IF test_is_xs -%] \
+	CC="%{__cc}" \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
 %{?with_tests:%{__make} test}
