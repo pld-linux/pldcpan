@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # Requirements:
 # perl-Pod-Tree perl-Archive-Any perl-Template-Toolkit perl-YAML perl-IO-String
-# perl-File-Iterator perl-Module-CoreList
+# perl-File-Find-Rule perl-Module-CoreList
 use strict;
 
 use Cwd qw( getcwd );
@@ -15,7 +15,7 @@ use Template         ();
 use YAML             ();
 use Digest::MD5      ();
 use IO::String       ();
-use File::Iterator   ();
+use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
 
@@ -221,14 +221,9 @@ sub test_find_pod_file {
 		warn " .. unable to search for \$pod_file without parts\n";
 		return $info->{_tests}->{find_pod_file} = 0;
 	}
-	my $it = File::Iterator->new(
-		DIR     => $info->{dir},
-		RECURSE => 1,
-		FILTER =>
-		  sub { $_[0] =~ m#(?:^|/)\Q$mfile\E\.(?:pod|pm)$# && $_[0] !~ m#/t/# }
-	);
+
 	my ($pm, $pod);
-	while (my $f = $it->next()) {
+	for my $f ( grep !m#/t/#, File::Find::Rule->file->name( "$mfile.pod", "$mfile.pm", )->in( $info->{dir} ) ) {
 		$pod = $f if $f =~ /\.pod$/;
 		$pm  = $f if $f =~ /\.pm$/;
 	}
