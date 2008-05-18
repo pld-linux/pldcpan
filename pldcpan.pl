@@ -143,8 +143,8 @@ sub test_has_doc_files {
 	$info->{doc_files} = [
 		grep -e,
 		grep !$tmp{$_}++,
+		map { $_, "$_.txt", "$_.TXT" }
 		map { $_, lc $_, uc $_ }
-		  map { $_, "$_.txt", "$_.TXT" }
 		  qw(AUTHORS BUGS ChangeLog Changes CREDITS doc docs documentation EXTRAS
 		  GOALS HACKING HISTORY INSTALL NEW NEWS NOTES PATCHING README DISCLAIMER
 		  ToDo)
