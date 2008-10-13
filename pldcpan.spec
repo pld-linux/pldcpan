@@ -25,6 +25,7 @@ BuildRequires:	perl-Template-Toolkit
 BuildRequires:	perl-YAML
 %endif
 Requires:	perl-Data-Dump
+Requires:	perl-Encode
 Requires:	perl-libwww
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
