@@ -2,6 +2,51 @@
 # Requirements:
 # perl-Pod-Tree perl-Archive-Any perl-Template-Toolkit perl-YAML perl-IO-String
 # perl-File-Find-Rule perl-Module-CoreList
+
+=head1 NAME
+
+pldcpan - A Perl module packager
+
+=head1 SYNOPSIS
+
+    pldcpan.pl [ OPTIONS ] DIST [ DIST2 DIST3 ... ]
+
+=head1 DESCRIPTION
+
+This program uncompresses given archives in the current directory and -- more
+or less successfully -- attempts to write corresponding perl-*.spec files.
+
+DIST can be a directory, a compressed archive, URL to fetch or module name
+(Foo::Bar) to be found on search.cpan.org.
+
+=head1 TODO
+
+Some things we're working on/thinking about:
+
+  1. use poldek to search if dir should be packaged:
+     $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
+     perl-base-5.8.7-4
+  2. first could be checked if the dir is contained by perl-base (will be faster than querying poldek)
+
+=head1 BUGS
+
+Every software has bugs, if you find one and it's really annoying for you, try
+opening bugreport at: F<http://bugs.pld-linux.org>
+
+=head1 AUTHOR
+
+Radoslaw Zielinski <radek@pld-linux.org>.
+This manual page was composed by Elan Ruusamae <glen@pld-linux.org>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2004-2008 PLD Linux Distribution
+
+This product is free and distributed under the Gnu Public License (GPL).
+
+=cut
+
+
 use strict;
 
 use Cwd qw( getcwd );
@@ -18,17 +63,6 @@ use IO::String       ();
 use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
-
-=cut
-TODO/Wishlist
-
-- use poldek to search if dir should be packaged:
-$ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
-perl-base-5.8.7-4
-- first could be checked if the dir is contained by perl-base (will be faster
-than querying poldek)
-
-=cut
 
 our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /(\d+)/g;
 our %opts;
@@ -371,7 +405,7 @@ sub test_find_summ_descr {
 		$info->{ $sec->{h} } =~ s/^\s*=head.*//;
 	}
 
-=pod
+=begin comment
 	my $tree = new Pod::Tree;
 	$tree->load_file($info->{pod_file});
 	unless ($tree->has_pod) {
@@ -402,7 +436,7 @@ sub test_find_summ_descr {
 	warn " ,, no summary in $info->{pod_file}\n"     unless $info->{summary};
 	warn " ,, no description in $info->{pod_file}\n" unless $info->{descr};
 
-=pod
+=begin comment
 	my $file < io($info->{pod_file});
 	$file =~ y/\r//d;
 	if ($file =~ /(?:^|\n)=head\d\s+NAME[\t ]*\n\s*(.+)\n+(?:=|$)/) {
