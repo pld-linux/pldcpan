@@ -23,7 +23,7 @@ DIST can be a directory, a compressed archive, URL to fetch or module name
 
 Some things we're working on/thinking about:
 
-  1. use poldek to search if dir should be packaged:
+  1. use poldek to search whether dir should be packaged:
      $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
      perl-base-5.8.7-4
   2. first could be checked if the dir is contained by perl-base (will be faster than querying poldek)
