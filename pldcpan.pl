@@ -111,7 +111,7 @@ sub test_directory {
 		  )?
 		)
 		-
-		(\d[\d._-]*[a-z]?\d*)
+		v?(\d[\d._-]*[a-z]?\d*)
 		/*$ #ix
 	  )
 	{
