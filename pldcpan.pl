@@ -23,10 +23,24 @@ DIST can be a directory, a compressed archive, URL to fetch or module name
 
 Some things we're working on/thinking about:
 
-  1. use poldek to search whether dir should be packaged:
+=over
+
+=item 1.
+
+use poldek to search whether dir should be packaged:
+
      $ poldek -q --cmd search -f /usr/share/perl5/vendor_perl/Text
      perl-base-5.8.7-4
-  2. first could be checked if the dir is contained by perl-base (will be faster than querying poldek)
+
+=item 2.
+
+first could be checked if the dir is contained by perl-base (will be faster than querying poldek)
+
+=item 3.
+
+Detect Module::AutoInstall and add --skipdeps to Makefile.PL.
+
+=back
 
 =head1 BUGS
 
@@ -406,6 +420,7 @@ sub test_find_summ_descr {
 	}
 
 =begin comment
+
 	my $tree = new Pod::Tree;
 	$tree->load_file($info->{pod_file});
 	unless ($tree->has_pod) {
@@ -428,6 +443,7 @@ sub test_find_summ_descr {
 		}
 		$info->{$state} .= $n->get_text if $state;
 	}
+
 =cut
 
 	$info->{summary} =~ y/\r\n\t /    /s;
@@ -437,6 +453,7 @@ sub test_find_summ_descr {
 	warn " ,, no description in $info->{pod_file}\n" unless $info->{descr};
 
 =begin comment
+
 	my $file < io($info->{pod_file});
 	$file =~ y/\r//d;
 	if ($file =~ /(?:^|\n)=head\d\s+NAME[\t ]*\n\s*(.+)\n+(?:=|$)/) {
@@ -458,6 +475,7 @@ sub test_find_summ_descr {
 		warn " ,, no description: $_\n";
 		$info->{descr} = '';
 	}
+
 =cut
 
 	$info->{_tests}->{find_summ_descr} =
