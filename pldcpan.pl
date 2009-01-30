@@ -67,11 +67,11 @@ use Cwd qw( getcwd );
 use Getopt::Long qw( GetOptions );
 use IPC::Run qw( run timeout );
 use Pod::Select qw( podselect );
+use YAML::Any qw(LoadFile);
 
 use Pod::Tree        ();
 use Archive::Any     ();
 use Template         ();
-use YAML             ();
 use Digest::MD5      ();
 use IO::String       ();
 use File::Find::Rule ();
@@ -221,7 +221,7 @@ sub load_META_yml {
 	return $info->{_tests}->{license}
 	  if defined $info->{_tests}->{license};
 	if (-f 'META.yml') {
-		$info->{META_yml} = YAML::LoadFile('META.yml');
+		$info->{META_yml} = LoadFile('META.yml');
 	}
 
 	_remove_core_meta_requires($info, 'requires');
