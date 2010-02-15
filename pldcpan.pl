@@ -651,7 +651,7 @@ for my $arg (@ARGV) {
 		## TODO: %pdir / %pnam in %URL
 	}
 	elsif (my ($tarname) =
-		$arg =~ m#^(?:https?|ftp)://[^/]+/(?:[^/]+/)*([^/]+)$#)
+		$arg =~ m# ^ (?:https?|ftp):// [^/]+/ (?:[^/]+/)* ([^/]+) $ #x)
 	{
 		$info->{url} = $arg;
 		warn " -- fetching '$tarname'\n";
@@ -730,7 +730,7 @@ for my $arg (@ARGV) {
 
 	my $basedir = getcwd;
 
-	$info->{dir} =~ s#/*$##;
+	$info->{dir} =~ s{/*$}{};
 	die " !! not a directory: $info->{dir}" unless -d $info->{dir};
 	warn " .. processing $info->{dir}\n";
 	chdir $info->{dir};
@@ -799,7 +799,7 @@ __DATA__
 [% IF pnam -%]
 %define	pnam	[% pnam %]
 [% END -%]
-Summary:	[% summary.replace('[\r\n]+', ' ') %]
+Summary:	[% summary.replace('[\r\n\t ]+', ' ') |trim %]
 #Summary(pl.UTF-8):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
 Version:	[% version %]
@@ -831,6 +831,11 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 #URL:		http://search.cpan.org/dist/[% pdir %]-[% pnam %]/
 [% ELSE -%]
 #URL:		http://search.cpan.org/dist/[% pdir %]/
+[% END -%]
+[% IF uses_module_build -%]
+[% req = 'perl-Module-Build' -%]
+BuildRequires:	perl-Module-Build[% ' >= ' _ build_requires.$req IF build_requires.$req %]
+[% build_requires.delete('perl-Module-Build') -%]
 [% END -%]
 BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
