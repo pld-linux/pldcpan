@@ -23,7 +23,7 @@ BuildRequires:	perl-IPC-Run
 BuildRequires:	perl-Module-CoreList
 BuildRequires:	perl-Pod-Tree
 BuildRequires:	perl-Template-Toolkit
-BuildRequires:	perl-YAML
+BuildRequires:	perl-YAML >= 0.68
 %endif
 Requires:	perl-Data-Dump
 Requires:	perl-Encode
