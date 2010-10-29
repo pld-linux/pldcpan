@@ -1,12 +1,12 @@
 #
 # Conditional build:
 %bcond_with	autodeps	# BR packages needed only for resolving deps
-#
+
 %include	/usr/lib/rpm/macros.perl
 Summary:	PLD Linux script to create RPMS from CPAN modules
 Summary(pl.UTF-8):	Skrypt PLD tworzący pakiety RPM z modułów z CPAN
 Name:		pldcpan
-Version:	1.59
+Version:	1.60
 Release:	1
 License:	GPL
 Group:		Development/Languages/Perl
@@ -47,7 +47,7 @@ if [ "$ver" != "%{version}" ]; then
 	: Update Version to $ver, and retry
 	exit 1
 fi
-install %{SOURCE0} .
+install -p %{SOURCE0} .
 
 %build
 pod2man -c "" pldcpan.pl > pldcpan.1
@@ -55,7 +55,7 @@ pod2man -c "" pldcpan.pl > pldcpan.1
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_bindir},%{_mandir}/man1}
-install pldcpan.pl $RPM_BUILD_ROOT%{_bindir}/pldcpan
+install -p pldcpan.pl $RPM_BUILD_ROOT%{_bindir}/pldcpan
 cp -a pldcpan.1 $RPM_BUILD_ROOT%{_mandir}/man1
 
 %clean
