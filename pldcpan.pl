@@ -793,12 +793,12 @@ __DATA__
 #
 # Conditional build:
 %bcond_without	tests		# do not perform "make test"
-#
-%include	/usr/lib/rpm/macros.perl
-%define	pdir	[% pdir %]
+
+%define		pdir	[% pdir %]
 [% IF pnam -%]
-%define	pnam	[% pnam %]
+%define		pnam	[% pnam %]
 [% END -%]
+%include	/usr/lib/rpm/macros.perl
 Summary:	[% summary.replace('[\r\n\t ]+', ' ') |trim %]
 #Summary(pl.UTF-8):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
