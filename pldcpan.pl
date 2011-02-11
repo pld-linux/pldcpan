@@ -793,7 +793,7 @@ __DATA__
 #
 # Conditional build:
 %bcond_without	tests		# do not perform "make test"
-
+#
 %define		pdir	[% pdir %]
 [% IF pnam -%]
 %define		pnam	[% pnam %]
