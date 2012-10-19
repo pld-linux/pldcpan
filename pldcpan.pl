@@ -789,7 +789,6 @@ for my $arg (@ARGV) {
 
 # vim: ts=4 sw=4 noet noai nosi cin
 __DATA__
-# $[% 'Revision:$, $Date'%]:$
 #
 # Conditional build:
 %bcond_without	tests		# do not perform "make test"
@@ -932,10 +931,3 @@ rm -rf $RPM_BUILD_ROOT
 [% IF test_has_examples -%]
 %{_examplesdir}/%{name}-%{version}
 [% END -%]
-
-%define	date	%(echo `LC_ALL="C" date +"%a %b %d %Y"`)
-%changelog
-* %{date} PLD Team <feedback@pld-linux.org>
-All persons listed below can be reached at <cvs_login>@pld-linux.org
-
-$[%'Log:'%]$
