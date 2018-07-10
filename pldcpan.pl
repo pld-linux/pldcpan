@@ -17,7 +17,7 @@ This program uncompresses given archives in the current directory and -- more
 or less successfully -- attempts to write corresponding perl-*.spec files.
 
 DIST can be a directory, a compressed archive, URL to fetch or module name
-(Foo::Bar) to be found on search.cpan.org.
+(Foo::Bar) to be found on metacpan.org.
 
 =head1 TODO
 
@@ -78,7 +78,7 @@ use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
 
-our $VERSION = 1.62;
+our $VERSION = 1.63;
 our %opts;
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
@@ -100,7 +100,7 @@ and -- more or less successfully -- attempts to write corresponding
 perl-*.spec files.
 
 DIST can be a directory, a compressed archive, URL to fetch or module
-name (Foo::Bar) to be found on search.cpan.org.
+name (Foo::Bar) to be found on metacpan.org.
 
 $Id$
 EOF
@@ -663,14 +663,14 @@ for my $arg (@ARGV) {
 		$arg = $tarname;
 	}
 	elsif ($arg =~ /^[a-z\d_]+(?:(?:::|-)[a-z\d_]+)*$/i) {
-		(my $dist = $arg) =~ s/::/-/g;
-		warn " -- searching for '$dist' on search.cpan.org\n";
-		my $scpan = LWP::Simple::get("http://search.cpan.org/dist/$dist/");
+		my $dist = $arg;
+		warn " -- searching for '$dist' on metacpan.org\n";
+		my $scpan = LWP::Simple::get("https://fastapi.metacpan.org/v1/download_url/$dist");
 		if (   !defined $scpan
-			|| $scpan =~ /cannot be found, did you mean one of these/
-			|| $scpan !~ m#<a href="/CPAN/authors/id/([^"]+/([^/"]+))">Download</a>#)
+			|| $scpan =~ /Not found/
+			|| $scpan !~ m#"download_url" : ".*/authors/id/([^"]+/([^/"]+))"#)
 		{
-			warn " !! searching for '$dist' on search.cpan.org failed\n";
+			warn " !! searching for '$dist' on metacpan.org failed\n";
 			next;
 		}
 		$info->{url} = "http://www.cpan.org/modules/by-authors/id/$1";
@@ -827,9 +827,9 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 [% END -%]
 # generic URL, check or change before uncommenting
 [% IF pnam -%]
-#URL:		http://search.cpan.org/dist/[% pdir %]-[% pnam %]/
+#URL:		https://metacpan.org/release/[% pdir %]-[% pnam %]/
 [% ELSE -%]
-#URL:		http://search.cpan.org/dist/[% pdir %]/
+#URL:		https://metacpan.org/release/[% pdir %]/
 [% END -%]
 [% IF uses_module_build -%]
 [% req = 'perl-Module-Build' -%]
