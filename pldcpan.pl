@@ -78,7 +78,7 @@ use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
 
-our $VERSION = 1.63;
+our $VERSION = 1.64;
 our %opts;
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
@@ -664,6 +664,7 @@ for my $arg (@ARGV) {
 	}
 	elsif ($arg =~ /^[a-z\d_]+(?:(?:::|-)[a-z\d_]+)*$/i) {
 		my $dist = $arg;
+		$dist =~ s/-/::/g if $dist =~ /-/;
 		warn " -- searching for '$dist' on metacpan.org\n";
 		my $scpan = LWP::Simple::get("https://fastapi.metacpan.org/v1/download_url/$dist");
 		if (   !defined $scpan
