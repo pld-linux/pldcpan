@@ -798,7 +798,6 @@ __DATA__
 [% IF pnam -%]
 %define		pnam	[% pnam %]
 [% END -%]
-%include	/usr/lib/rpm/macros.perl
 Summary:	[% summary.replace('[\r\n\t ]+', ' ') |trim %]
 #Summary(pl.UTF-8):	
 Name:		perl-[% pdir %][% IF pnam %]-[% pnam %][% END %]
@@ -828,9 +827,9 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 [% END -%]
 # generic URL, check or change before uncommenting
 [% IF pnam -%]
-#URL:		https://metacpan.org/release/[% pdir %]-[% pnam %]/
+#URL:		https://metacpan.org/release/[% pdir %]-[% pnam %]
 [% ELSE -%]
-#URL:		https://metacpan.org/release/[% pdir %]/
+#URL:		https://metacpan.org/release/[% pdir %]
 [% END -%]
 [% IF uses_module_build -%]
 [% req = 'perl-Module-Build' -%]
@@ -839,6 +838,7 @@ BuildRequires:	perl-Module-Build[% ' >= ' _ build_requires.$req IF build_require
 [% END -%]
 BuildRequires:	perl-devel >= 1:5.8.0
 BuildRequires:	rpm-perlprov >= 4.1-13
+BuildRequires:	rpmbuild(macros) >= 1.745
 [% IF test_has_tests -%]
 %if %{with tests}
 [% FOREACH req IN requires.keys.sort -%]
