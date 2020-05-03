@@ -78,7 +78,7 @@ use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
 
-our $VERSION = 1.64;
+our $VERSION = 1.65;
 our %opts;
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
