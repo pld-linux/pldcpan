@@ -77,6 +77,9 @@ use IO::String       ();
 use File::Find::Rule ();
 use Module::CoreList ();
 use LWP::Simple      ();
+use LWP::UserAgent   ();
+
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
 our $VERSION = 1.65;
 our %opts;
@@ -666,12 +669,13 @@ for my $arg (@ARGV) {
 		my $dist = $arg;
 		$dist =~ s/-/::/g if $dist =~ /-/;
 		warn " -- searching for '$dist' on metacpan.org\n";
-		my $scpan = LWP::Simple::get("https://fastapi.metacpan.org/v1/download_url/$dist");
-		if (   !defined $scpan
-			|| $scpan =~ /Not found/
-			|| $scpan !~ m#"download_url" : ".*/authors/id/([^"]+/([^/"]+))"#)
+		my $ua = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0, });
+		my $scpan = $ua->get("https://fastapi.metacpan.org/v1/download_url/$dist");
+		if (   !$scpan->is_success
+			|| $scpan->decoded_content =~ /Not found/
+			|| $scpan->decoded_content !~ m#"download_url" : ".*/authors/id/([^"]+/([^/"]+))"#)
 		{
-			warn " !! searching for '$dist' on metacpan.org failed\n";
+			warn " !! searching for '$dist' on metacpan.org failed: $scpan->status_line\n";
 			next;
 		}
 		$info->{url} = "http://www.cpan.org/modules/by-authors/id/$1";
