@@ -796,7 +796,7 @@ for my $arg (@ARGV) {
 __DATA__
 #
 # Conditional build:
-%bcond_without	tests		# do not perform "make test"
+%bcond_without	tests		# unit tests
 #
 %define		pdir	[% pdir %]
 [% IF pnam -%]
@@ -831,9 +831,9 @@ Source0:	http://www.cpan.org/modules/by-module/[% pdir %]/%{pdir}-%{version}.tar
 [% END -%]
 # generic URL, check or change before uncommenting
 [% IF pnam -%]
-#URL:		https://metacpan.org/release/[% pdir %]-[% pnam %]
+#URL:		https://metacpan.org/dist/[% pdir %]-[% pnam %]
 [% ELSE -%]
-#URL:		https://metacpan.org/release/[% pdir %]
+#URL:		https://metacpan.org/dist/[% pdir %]
 [% END -%]
 [% IF uses_module_build -%]
 [% req = 'perl-Module-Build' -%]
