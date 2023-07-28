@@ -121,10 +121,10 @@ sub test_directory {
 		$fooball =~ m#^
 		(?:.*/)?
 		(
-		  [a-z][a-z\d]* 
+		  [a-z][a-z_\d]*
 		  (?:
-			([-_])[a-z][a-z\d]*
-			(?: \2[a-z][a-z\d]*)*
+			(-)[a-z][a-z_\d]*
+			(?: -[a-z][a-z_\d]*)*
 		  )?
 		)
 		-
