@@ -54,7 +54,7 @@ This manual page was composed by Elan Ruusamae <glen@pld-linux.org>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2004-2008 PLD Linux Distribution
+Copyright (c) 2004-2023 PLD Linux Distribution
 
 This product is free and distributed under the Gnu Public License (GPL).
 
@@ -81,7 +81,7 @@ use LWP::UserAgent   ();
 
 $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
-our $VERSION = 1.65;
+our $VERSION = 1.66;
 our %opts;
 GetOptions(\%opts, 'verbose|v', 'modulebuild|B', 'makemaker|M', 'force');
 eval "use Data::Dump qw(pp);" if $opts{verbose};
