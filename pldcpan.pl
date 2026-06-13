@@ -878,7 +878,9 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 	installdirs=vendor
 ./Build
 
-%{?with_tests:./Build test}
+%if %{with tests}
+./Build test
+%endif
 [%- ELSIF uses_makemaker %]
 %{__perl} Makefile.PL \
 	INSTALLDIRS=vendor
@@ -886,7 +888,9 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 	CC="%{__cc}" \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
-%{?with_tests:%{__make} test}
+%if %{with tests}
+%{__make} test
+%endif
 [%- ELSE %]
 %{__perl} -MExtUtils::MakeMaker -wle 'WriteMakefile(NAME=>"[% parts_joined %]")' \
 	INSTALLDIRS=vendor
@@ -894,7 +898,9 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 	CC="%{__cc}" \
 	OPTIMIZE="%{rpmcflags}"[% END %]
 
-%{?with_tests:%{__make} test}
+%if %{with tests}
+%{__make} test
+%endif
 [%- END %]
 
 %install
